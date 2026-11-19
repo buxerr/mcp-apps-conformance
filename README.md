@@ -1,36 +1,58 @@
-# MCP Apps Conformance
+# MCP Apps Host Conformance Test Runner
 
-A small, dependency-free conformance runner for MCP Apps host adapters. It exercises host metadata, required capabilities, app-origin policy, lifecycle ordering, request correlation, and session cleanup. Reports use stable check names and can be exported as JUnit XML for CI.
+Test an MCP Apps host adapter against deterministic checks for host metadata, capabilities, app-origin policy, lifecycle order, request correlation, and session cleanup. The JavaScript runner returns stable results and can export JUnit XML for CI.
 
-The package defines an adapter boundary instead of automating a particular host UI. Implement the four adapter methods (probe, openApp, request, and closeApp) for the host you want to verify, then pass that adapter to runConformance.
+Use this when you are implementing an MCP Apps host and want repeatable adapter checks without writing a separate suite for every host UI.
 
 ## Install and run
 
-Run npm test with Node.js 20 or newer. The test suite uses only Node's built-in test runner.
+Requires Node.js 20 or newer. Clone the repository, then run its test suite:
 
-## Minimal adapter
+```sh
+git clone https://github.com/buxerr/mcp-apps-conformance.git
+cd mcp-apps-conformance
+npm install
+npm test
+```
 
-    const adapter = {
-      async probe() {
-        return { name: "My host", protocolVersion: "1", capabilities: { tools: true } };
-      },
-      async openApp(input) {
-        return { id: "session", origin: input.appOrigin, lifecycleEvents: ["initialized", "ready"] };
-      },
-      async request(_sessionId, request) {
-        return { id: request.id, result: {} };
-      },
-      async closeApp() {
-        return { closed: true };
-      },
-    };
+To install it directly into a Node.js project from GitHub, run `npm install github:buxerr/mcp-apps-conformance`.
 
-The runner sends only a deterministic mcp/ping request. It does not contact a model provider or execute app code itself. Host adapters should enforce their own transport timeouts and must not treat a failed conformance report as a successful release check.
+## Implement a host adapter
 
-## Current scope
+The adapter is the boundary between the conformance checks and a host-specific implementation:
 
-This is an initial adapter contract and test runner. It does not yet implement browser automation, cross-host result aggregation, or every MCP Apps lifecycle and UI-context requirement. Those need host-specific adapters and a versioned test corpus.
+```js
+const adapter = {
+  async probe() {
+    return { name: "My host", protocolVersion: "1", capabilities: { tools: true } };
+  },
+  async openApp(input) {
+    return { id: "session", origin: input.appOrigin, lifecycleEvents: ["initialized", "ready"] };
+  },
+  async request(_sessionId, request) {
+    return { id: request.id, result: {} };
+  },
+  async closeApp() {
+    return { closed: true };
+  },
+};
+```
+
+Pass the adapter to `runConformance(adapter)`. The runner sends a deterministic `mcp/ping` request; it does not contact a model provider or execute app code.
+
+## What it checks
+
+- Host name, protocol version, and required capabilities
+- App origin policy and expected lifecycle ordering
+- Request ID correlation and session cleanup
+- Stable check results that can be written as JUnit XML
+
+## Scope and limitations
+
+This is an initial adapter contract and test runner. It does not provide browser automation, aggregate results from multiple hosts, or cover every MCP Apps lifecycle and UI-context requirement. Host adapters must enforce transport timeouts, and a failed conformance report should fail the release check.
+
+See the [MCP Apps project](https://github.com/modelcontextprotocol/ext-apps) for the surrounding protocol and host ecosystem.
 
 ## License
 
-MIT. See LICENSE.
+MIT. See [LICENSE](LICENSE).
