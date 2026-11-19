@@ -1,0 +1,15 @@
+{
+  "name": "@buxerr/mcp-apps-conformance",
+  "version": "0.1.0",
+  "description": "A dependency-free adapter contract and conformance runner for MCP Apps hosts.",
+  "type": "module",
+  "exports": "./src/index.js",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/index.js && node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
