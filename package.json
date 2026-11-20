@@ -1,9 +1,28 @@
 {
   "name": "@buxerr/mcp-apps-conformance",
   "version": "0.1.0",
-  "description": "A dependency-free adapter contract and conformance runner for MCP Apps hosts.",
+  "description": "Test MCP Apps host compatibility with an adapter smoke runner and proposal-aligned behavioral cases.",
   "type": "module",
-  "exports": "./src/index.js",
+  "keywords": ["mcp-apps", "model-context-protocol", "host-conformance", "mcp-testing", "playwright", "integration-testing", "ci"],
+  "repository": { "type": "git", "url": "https://github.com/buxerr/mcp-apps-conformance.git" },
+  "homepage": "https://github.com/buxerr/mcp-apps-conformance#readme",
+  "bugs": { "url": "https://github.com/buxerr/mcp-apps-conformance/issues" },
+  "files": ["src", "fixtures", "UPSTREAM-ALIGNMENT.md", "README.md", "LICENSE"],
+  "publishConfig": { "access": "public" },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./host-interface": {
+      "types": "./src/host-interface.d.ts",
+      "import": "./src/host-interface.js"
+    },
+    "./proposed-cases": {
+      "types": "./src/proposed-cases.d.ts",
+      "import": "./src/proposed-cases.js"
+    }
+  },
   "scripts": {
     "test": "node --test",
     "check": "node --check src/index.js && node --test"

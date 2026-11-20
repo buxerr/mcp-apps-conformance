@@ -1,57 +1,55 @@
-# MCP Apps Host Conformance Test Runner
+# MCP Apps Host Conformance
 
-Test an MCP Apps host adapter against deterministic checks for host metadata, capabilities, app-origin policy, lifecycle order, request correlation, and session cleanup. The JavaScript runner returns stable results and can export JUnit XML for CI.
+An experimental, dependency-free starting point for testing MCP Apps host adapters. It follows the **proposed** host test interface in [`modelcontextprotocol/ext-apps#743`](https://github.com/modelcontextprotocol/ext-apps/issues/743).
 
-Use this when you are implementing an MCP Apps host and want repeatable adapter checks without writing a separate suite for every host UI.
+The current host-interface entrypoint checks the eight adapter methods, launches one named suite, confirms the returned iframe has a `sandbox` attribute, and resets the host before and after the smoke check. It does **not** run the proposal's full behavioral suite and does not certify a host.
 
-## Install and run
+## Try the smoke check
 
-Requires Node.js 20 or newer. Clone the repository, then run its test suite:
+Requires Node.js 20 or newer. Implement the proposed `HostTestInterface` for your host, then call:
+
+```js
+import { runHostInterfaceSmoke, toJUnitXml } from "@buxerr/mcp-apps-conformance";
+import { hostAdapter } from "./host-adapter.js";
+
+const report = await runHostInterfaceSmoke(hostAdapter, { suite: "core" });
+console.log(JSON.stringify(report, null, 2));
+console.log(toJUnitXml(report));
+process.exitCode = report.status === "passed" ? 0 : 1;
+```
+
+`hostAdapter` must implement `displayTestApp`, `resetEnvironment`, `getConversation`, `getConversationContext`, `changeHostContext`, `confirmAction`, `sendMessage`, and `callTool`. The exact TypeScript contract is exported as `HostTestInterface` from `@buxerr/mcp-apps-conformance/host-interface`.
+
+The smoke runner resets the host, calls `displayTestApp(suite)`, checks the iframe's sandbox attribute, and resets the host again even if launch fails. The adapter remains responsible for launching a fresh app instance per suite and for bounding its own UI operations.
+
+## Proposed test catalog
+
+`PROPOSED_CASES` from `@buxerr/mcp-apps-conformance/proposed-cases` indexes the cases in the upstream proposal, including their suite, spec revision, requirement keyword, and whether they need host interaction. The proposal currently groups cases into 22 core, 7 isolated, and 4 draft checks. This catalog is planning metadata; it does not imply those checks execute here. See [`UPSTREAM-ALIGNMENT.md`](UPSTREAM-ALIGNMENT.md) for the coverage boundary and source links.
+
+The first behavioral case is visibility/app-tool-hidden. It checks that the fixture's app-only conformance_probe is absent from the model tool list while the model-visible conformance_model_probe control is present. The reference MCP App server and build instructions are in fixtures/app-tool-hidden/README.md.
+
+Run it against a host adapter with:
+
+    const report = await runHostInterfaceCase(hostAdapter, "visibility/app-tool-hidden");
+
+The adapter's displayTestApp("core") implementation should launch the fixture's conformance_launch tool, wait for the iframe, and return it.
+
+## Existing generic transport smoke API
+
+The root module also retains `runConformance(adapter, options)` for a small, generic four-method transport smoke check (`probe`, `openApp`, `request`, `closeApp`). That API predates the upstream proposal and is **not** the MCP Apps `HostTestInterface`.
+
+## Development
 
 ```sh
-git clone https://github.com/buxerr/mcp-apps-conformance.git
-cd mcp-apps-conformance
 npm install
 npm test
 ```
 
-To install it directly into a Node.js project from GitHub, run `npm install github:buxerr/mcp-apps-conformance`.
+The tests cover the generic transport smoke API. Host-interface behavior is experimental and not yet covered by an automated suite.
 
-## Implement a host adapter
+## Status
 
-The adapter is the boundary between the conformance checks and a host-specific implementation:
-
-```js
-const adapter = {
-  async probe() {
-    return { name: "My host", protocolVersion: "1", capabilities: { tools: true } };
-  },
-  async openApp(input) {
-    return { id: "session", origin: input.appOrigin, lifecycleEvents: ["initialized", "ready"] };
-  },
-  async request(_sessionId, request) {
-    return { id: request.id, result: {} };
-  },
-  async closeApp() {
-    return { closed: true };
-  },
-};
-```
-
-Pass the adapter to `runConformance(adapter)`. The runner sends a deterministic `mcp/ping` request; it does not contact a model provider or execute app code.
-
-## What it checks
-
-- Host name, protocol version, and required capabilities
-- App origin policy and expected lifecycle ordering
-- Request ID correlation and session cleanup
-- Stable check results that can be written as JUnit XML
-
-## Scope and limitations
-
-This is an initial adapter contract and test runner. It does not provide browser automation, aggregate results from multiple hosts, or cover every MCP Apps lifecycle and UI-context requirement. Host adapters must enforce transport timeouts, and a failed conformance report should fail the release check.
-
-See the [MCP Apps project](https://github.com/modelcontextprotocol/ext-apps) for the surrounding protocol and host ecosystem.
+This project is independent and unofficial. It is not affiliated with, endorsed by, or a certification program of the Model Context Protocol project. The proposal remains open to change; the `draft` cases are explicitly unstable.
 
 ## License
 

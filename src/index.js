@@ -151,3 +151,6 @@ export function toJUnitXml(report) {
     "",
   ].join("\n");
 }
+
+export { HOST_INTERFACE_CASES, HOST_TEST_METHODS, HOST_TEST_SUITES, runHostInterfaceCase, runHostInterfaceSmoke } from "./host-interface.js";
+export { PROPOSED_CASES, PROPOSED_CASE_COUNTS } from "./proposed-cases.js";

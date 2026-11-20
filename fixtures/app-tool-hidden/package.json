@@ -1,0 +1,23 @@
+{
+  "name": "@buxerr/mcp-apps-app-tool-visibility-fixture",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "serve": "node server.mjs",
+    "serve:mutant": "npm run build && node server.mjs --mutate-leak-app-tool"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^2.1.0",
+    "@modelcontextprotocol/server": "2.0.0",
+    "zod": "^4.2.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.3.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
